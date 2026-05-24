@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Apostila — Spring Security com Spring Boot 3</title>
+<style>
+  :root {
+    --vm-escuro:   #7f1d1d;
+    --vm-medio:    #b91c1c;
+    --vm-claro:    #ef4444;
+    --vm-suave:    #fff1f1;
+    --verde:       #1e8449;
+    --amarelo:     #d4ac0d;
+    --azul:        #1d4ed8;
+    --roxo:        #6c3483;
+    --laranja:     #ca6f1e;
+    --cinza-bg:    #fdf7f7;
+    --cinza-borda: #f0d5d5;
+    --texto:       #2a0a0a;
+    --sidebar-w:   280px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: var(--texto);
+    background: var(--cinza-bg);
+    line-height: 1.7;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    width: var(--sidebar-w);
+    height: 100vh;
+    background: var(--vm-escuro);
+    overflow-y: auto;
+    z-index: 100;
+  }
+  .sidebar-header {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+  }
+  .sidebar-header h1 { color:#fff; font-size:15px; font-weight:700; line-height:1.4; }
+  .sidebar-header p  { color: #fca5a5; font-size:12px; margin-top:4px; }
+  .sidebar nav { padding: 12px 0 40px; }
+  .nav-group-title {
+    color: rgba(255,255,255,.4);
+    font-size:10px; font-weight:700; letter-spacing:1.5px;
+    text-transform:uppercase;
+    padding: 16px 20px 4px;
+  }
+  .sidebar nav a {
+    display:block; color:rgba(255,255,255,.75);
+    text-decoration:none; font-size:13px;
+    padding: 7px 20px;
+    border-left: 3px solid transparent;
+    transition: all .2s;
+  }
+  .sidebar nav a:hover, .sidebar nav a.ativo {
+    color:#fff;
+    background: rgba(239,68,68,.18);
+    border-left-color: #fca5a5;
+  }
+  .sidebar nav a .num {
+    display:inline-block;
+    background: rgba(239,68,68,.25); color:#fca5a5;
+    font-size:10px; font-weight:700;
+    width:20px; height:20px; line-height:20px;
+    text-align:center; border-radius:4px; margin-right:8px;
+  }
+  .sidebar::-webkit-scrollbar { width:4px; }
+  .sidebar::-webkit-scrollbar-track { background:transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background:rgba(255,255,255,.2); border-radius:2px; }
+
+  /* ── Conteúdo ── */
+  .content { margin-left: var(--sidebar-w); padding: 0 0 80px; }
+
+  .hero {
+    background: linear-gradient(135deg, var(--vm-escuro) 0%, var(--vm-medio) 100%);
+    color:#fff; padding: 60px 60px 50px;
+  }
+  .hero h1 { font-size:32px; font-weight:800; margin-bottom:10px; }
+  .hero p   { font-size:16px; opacity:.85; max-width:640px; }
+  .badges   { margin-top:20px; display:flex; gap:10px; flex-wrap:wrap; }
+  .badge {
+    background: rgba(255,255,255,.15);
+    border: 1px solid rgba(255,255,255,.25);
+    color:#fff; padding:4px 12px; border-radius:20px;
+    font-size:12px; font-weight:600;
+  }
+
+  section { max-width:900px; margin:0 auto; padding:50px 60px 10px; }
+  section:first-of-type { padding-top:40px; }
+
+  .section-title {
+    display:flex; align-items:center; gap:14px;
+    margin-bottom:24px; padding-bottom:14px;
+    border-bottom: 2px solid var(--cinza-borda);
+  }
+  .section-num {
+    background: var(--vm-claro); color:#fff;
+    font-size:13px; font-weight:800;
+    min-width:36px; height:36px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:8px;
+  }
+  .section-title h2 { font-size:22px; color: var(--vm-escuro); }
+
+  h3 {
+    font-size:16px; color: var(--vm-medio);
+    margin:28px 0 10px;
+    padding-left:12px;
+    border-left:3px solid var(--vm-claro);
+  }
+
+  p { margin-bottom:14px; font-size:15px; }
+
+  /* ── Caixas informativas ── */
+  .box { border-radius:8px; padding:16px 20px; margin:20px 0; font-size:14px; }
+  .box-dica    { background:#fff5f5; border-left:4px solid var(--vm-claro); }
+  .box-aviso   { background:#fef9e7; border-left:4px solid var(--amarelo); }
+  .box-info    { background:#eafaf1; border-left:4px solid var(--verde); }
+  .box-erro    { background:#fff0f0; border-left:4px solid var(--vm-medio); }
+  .box-azul    { background:#eef2ff; border-left:4px solid var(--azul); }
+  .box-roxo    { background:#f3eafc; border-left:4px solid var(--roxo); }
+  .box strong  { font-weight:700; display:block; margin-bottom:4px; }
+  .box ul, .box ol { padding-left:18px; margin-top:6px; line-height:2; }
+
+  /* ── Diagrama / código dark ── */
+  .diagrama {
+    background:#1e0a0a; color:#a9b7c6;
+    font-family:'Courier New', monospace; font-size:13px;
+    padding:24px; border-radius:8px; margin:20px 0;
+    line-height:1.8; overflow-x:auto;
+  }
+  .diagrama pre { white-space: pre; }
+  .diagrama .dest   { color:#fca5a5; font-weight:700; }
+  .diagrama .verde  { color:#6dbf67; }
+  .diagrama .amarelo{ color:#ffd700; }
+  .diagrama .roxo   { color:#c792ea; }
+  .diagrama .laranja{ color:#f78c6c; }
+  .diagrama .kw     { color:#c084fc; }
+  .diagrama .fn     { color:#60a5fa; }
+  .diagrama .str    { color:#86efac; }
+  .diagrama .cm     { color:#5a3a3a; font-style:italic; }
+  .diagrama .an     { color:#34d399; }
+  .diagrama .nm     { color:#fb923c; }
+  .diagrama .pp     { color:#94a3b8; }
+  .diagrama .tg     { color:#f472b6; }
+  .diagrama .at     { color:#fbbf24; }
+
+  /* ── Tabela ── */
+  table { width:100%; border-collapse:collapse; margin:20px 0; font-size:14px; }
+  th    { background: var(--vm-escuro); color:#fff; padding:10px 14px; text-align:left; font-weight:600; }
+  td    { padding:9px 14px; border-bottom:1px solid var(--cinza-borda); }
+  tr:nth-child(even) td { background: var(--vm-suave); }
+
+  code:not([class]) {
+    background:#f7e5e5; color:#9b1c1c;
+    padding:2px 6px; border-radius:4px;
+    font-size:13px; font-family:'Courier New', monospace;
+  }
+
+  hr.divisor { border:none; border-top:1px solid var(--cinza-borda); margin:40px 0; }
+
+  /* ── Cards de passos ── */
+  .cards-etapas {
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr));
+    gap:14px; margin:24px 0;
+  }
+  .card-etapa {
+    background:#fff; border:1.5px solid var(--cinza-borda);
+    border-radius:10px; padding:18px 16px;
+    border-top:4px solid var(--vm-claro);
+  }
+  .card-etapa .num { font-size:11px; font-weight:700; color:var(--vm-claro); text-transform:uppercase; letter-spacing:.08em; }
+  .card-etapa h4   { font-size:15px; font-weight:700; color:var(--vm-escuro); margin:4px 0 8px; }
+  .card-etapa p    { font-size:13px; color:#555; margin:0; line-height:1.55; }
+
+  .card-etapa.c1 { border-top-color:#ef4444; } .card-etapa.c1 .num { color:#ef4444; }
+  .card-etapa.c2 { border-top-color:#f97316; } .card-etapa.c2 .num { color:#c2410c; }
+  .card-etapa.c3 { border-top-color:#eab308; } .card-etapa.c3 .num { color:#a16207; }
+  .card-etapa.c4 { border-top-color:#22c55e; } .card-etapa.c4 .num { color:#15803d; }
+  .card-etapa.c5 { border-top-color:#3b82f6; } .card-etapa.c5 .num { color:#1d4ed8; }
+
+  /* ── Processo / timeline ── */
+  .processo {
+    display:flex; flex-direction:column; gap:0; margin:24px 0;
+    position:relative;
+  }
+  .processo::before {
+    content:''; position:absolute;
+    left:22px; top:28px; bottom:28px; width:2px;
+    background: var(--cinza-borda);
+  }
+  .processo-item {
+    display:flex; gap:20px; align-items:flex-start; padding:12px 0;
+    position:relative;
+  }
+  .processo-num {
+    width:44px; height:44px; flex-shrink:0;
+    background:var(--vm-claro); color:#fff;
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:15px; font-weight:800; z-index:1;
+  }
+  .processo-body { flex:1; }
+  .processo-body h4 { font-size:15px; font-weight:700; color:var(--vm-escuro); margin-bottom:4px; }
+  .processo-body p  { font-size:14px; margin:0; color:#555; }
+
+  /* ── Comparativo ── */
+  .comparativo {
+    display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:24px 0;
+  }
+  .comp-card {
+    background:#fff; border:1.5px solid var(--cinza-borda);
+    border-radius:10px; padding:18px;
+  }
+  .comp-card h4 {
+    font-size:14px; font-weight:700; margin-bottom:10px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .comp-card ul { padding-left:16px; font-size:13.5px; line-height:2; color:#444; }
+
+  /* ── Tags inline ── */
+  .tag-verde  { background:#eafaf1; color:var(--verde);   border:1px solid #a9dfbf; border-radius:4px; padding:1px 7px; font-size:12px; font-weight:700; }
+  .tag-vm     { background:#fff1f1; color:var(--vm-medio);border:1px solid #fca5a5; border-radius:4px; padding:1px 7px; font-size:12px; font-weight:700; }
+  .tag-azul   { background:#eef2ff; color:var(--azul);    border:1px solid #bfdbfe; border-radius:4px; padding:1px 7px; font-size:12px; font-weight:700; }
+  .tag-roxo   { background:#f3eafc; color:var(--roxo);    border:1px solid #d7bde2; border-radius:4px; padding:1px 7px; font-size:12px; font-weight:700; }
+
+  /* ── Exemplo / card destacado ── */
+  .exemplo-real {
+    background:#fff; border:1.5px solid var(--cinza-borda);
+    border-radius:10px; padding:20px 22px; margin:20px 0;
+  }
+  .exemplo-real .label {
+    font-size:11px; font-weight:700; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--vm-claro); margin-bottom:8px;
+  }
+  .exemplo-real h4 { font-size:16px; font-weight:700; color:var(--vm-escuro); margin-bottom:10px; }
+  .exemplo-real p  { font-size:14px; margin-bottom:10px; color:#444; }
+  .exemplo-real p:last-child { margin-bottom:0; }
+
+  /* ── Rodapé ── */
+  .rodape { text-align:center; margin-top:50px; color:#888; font-size:13px; }
+  .rodape p { margin-bottom:4px; }
+
+  @media (max-width:768px) {
+    .sidebar { display:none; }
+    .content { margin-left:0; }
+    section { padding:30px 24px 10px; }
+    .hero { padding:40px 24px 30px; }
+    .comparativo { grid-template-columns:1fr; }
+    .cards-etapas { grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width:480px) {
+    .cards-etapas { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ SIDEBAR ══════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <h1>Spring Security<br>com Spring Boot 3</h1>
+    <p>Apostila — Java 17 · ADS</p>
+  </div>
+  <nav>
+    <div class="nav-group-title">Fundamentos</div>
+    <a href="#s1"><span class="num">1</span> O que é Spring Security?</a>
+    <a href="#s2"><span class="num">2</span> Configurando o pom.xml</a>
+    <a href="#s3"><span class="num">3</span> Arquitetura e Filter Chain</a>
+
+    <div class="nav-group-title">Implementação</div>
+    <a href="#s4"><span class="num">4</span> Entidade Usuario</a>
+    <a href="#s5"><span class="num">5</span> Repository</a>
+    <a href="#s6"><span class="num">6</span> UserDetailsService</a>
+    <a href="#s7"><span class="num">7</span> SecurityConfig</a>
+    <a href="#s8"><span class="num">8</span> Controller</a>
+    <a href="#s9"><span class="num">9</span> Views com Thymeleaf</a>
+    <a href="#s10"><span class="num">10</span> application.properties</a>
+
+    <div class="nav-group-title">Referência</div>
+    <a href="#s11"><span class="num">11</span> Fluxo de Autenticação</a>
+    <a href="#s12"><span class="num">12</span> Erros Comuns</a>
+  </nav>
+</aside>
+
+<!-- ══════════════ CONTEÚDO ════════════════════════════════════════════ -->
+<main class="content">
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1>Spring Security — do Zero ao Deploy</h1>
+    <p>Apostila completa para implementar autenticação e autorização com Spring Security 6,
+      usando o projeto <strong>_SistemaLogin</strong> como base real de aprendizado.
+      Passo a passo, do pom.xml ao HTML final.</p>
+    <div class="badges">
+      <span class="badge">Spring Boot 3.4.5</span>
+      <span class="badge">Java 17</span>
+      <span class="badge">Spring Security 6</span>
+      <span class="badge">Thymeleaf</span>
+      <span class="badge">MySQL + BCrypt</span>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════ SEÇÃO 1 ══════════════════════════════════ -->
+  <section id="s1">
+    <div class="section-title">
+      <div class="section-num">1</div>
+      <h2>O que é Spring Security?</h2>
+    </div>
+
+    <p><strong>Spring Security</strong> é o framework de segurança padrão do ecossistema Spring. Ele cuida de autenticação (verificar <em>quem</em> é o usuário), autorização (verificar <em>o que</em> o usuário pode fazer), proteção CSRF e gerenciamento de sessão.</p>
+
+    <p>É adotado em aplicações corporativas e acadêmicas por ser robusto, altamente configurável e integrado nativamente ao Spring Boot.</p>
+
+    <div class="box box-dica">
+      <strong>💡 Analogia</strong>
+      Pense no Spring Security como o porteiro de um prédio: ele verifica o crachá (autenticação) e decide quais andares você pode acessar (autorização). Sem configuração, ele bloqueia <em>tudo</em>.
+    </div>
+
+    <h3>O que ele protege automaticamente?</h3>
+
+    <div class="cards-etapas">
+      <div class="card-etapa c1">
+        <div class="num">Pilar 1</div>
+        <h4>🔐 Autenticação</h4>
+        <p>Verifica a identidade do usuário via formulário, JWT, OAuth2 ou Basic Auth.</p>
+      </div>
+      <div class="card-etapa c2">
+        <div class="num">Pilar 2</div>
+        <h4>🛡️ Autorização</h4>
+        <p>Controla o acesso por rota e por role. Ex: só ADMIN acessa <code>/admin/**</code>.</p>
+      </div>
+      <div class="card-etapa c3">
+        <div class="num">Pilar 3</div>
+        <h4>🔒 CSRF</h4>
+        <p>Proteção contra Cross-Site Request Forgery em formulários POST.</p>
+      </div>
+      <div class="card-etapa c4">
+        <div class="num">Pilar 4</div>
+        <h4>🕐 Sessão</h4>
+        <p>Gerencia sessões ativas, timeout e controle de sessões simultâneas.</p>
+      </div>
+      <div class="card-etapa c5">
+        <div class="num">Pilar 5</div>
+        <h4>📋 Headers HTTP</h4>
+        <p>Adiciona headers de segurança: X-Frame-Options, HSTS, CSP e outros.</p>
+      </div>
+    </div>
+
+    <div class="box box-erro">
+      <strong>⚠️ Atenção ao adicionar a dependência</strong>
+      Assim que você adicionar <code>spring-boot-starter-security</code>, o Spring bloqueia <strong>todas as rotas</strong> automaticamente. Você precisa configurar o <code>SecurityConfig</code> para liberar o que for necessário.
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════ SEÇÃO 2 ══════════════════════════════════ -->
+  <section id="s2">
+    <div class="section-title">
+      <div class="section-num">2</div>
+      <h2>Configurando o pom.xml</h2>
+    </div>
+
+    <p>Este é o <code>pom.xml</code> do projeto <strong>_SistemaLogin</strong>. Cada dependência tem um papel específico na cadeia de segurança.</p>
+
+    <div class="diagrama"><pre><span class="pp">&lt;!-- Spring Boot 3 exige Java 17 como mínimo --&gt;</span>
+<span class="tg">&lt;parent&gt;</span>
+  <span class="tg">&lt;artifactId&gt;</span>spring-boot-starter-parent<span class="tg">&lt;/artifactId&gt;</span>
+  <span class="tg">&lt;version&gt;</span><span class="nm">3.4.5</span><span class="tg">&lt;/version&gt;</span>
+<span class="tg">&lt;/parent&gt;</span>
+
+<span class="tg">&lt;dependencies&gt;</span>
+
+  <span class="pp">&lt;!-- 1. JPA: faz a ponte entre Java e o banco de dados --&gt;</span>
+  <span class="tg">&lt;dependency&gt;</span>
+    <span class="tg">&lt;artifactId&gt;</span>spring-boot-starter-data-jpa<span class="tg">&lt;/artifactId&gt;</span>
+  <span class="tg">&lt;/dependency&gt;</span>
+
+  <span class="pp">&lt;!-- 2. SECURITY: o coração desta apostila --&gt;</span>
+  <span class="tg">&lt;dependency&gt;</span>
+    <span class="tg">&lt;artifactId&gt;</span>spring-boot-starter-security<span class="tg">&lt;/artifactId&gt;</span>
+  <span class="tg">&lt;/dependency&gt;</span>
+
+  <span class="pp">&lt;!-- 3. THYMELEAF: motor de templates HTML --&gt;</span>
+  <span class="tg">&lt;dependency&gt;</span>
+    <span class="tg">&lt;artifactId&gt;</span>spring-boot-starter-thymeleaf<span class="tg">&lt;/artifactId&gt;</span>
+  <span class="tg">&lt;/dependency&gt;</span>
+
+  <span class="pp">&lt;!-- 4. THYMELEAF + SECURITY: habilita tags sec: no HTML --&gt;</span>
+  <span class="tg">&lt;dependency&gt;</span>
+    <span class="tg">&lt;artifactId&gt;</span>thymeleaf-extras-springsecurity6<span class="tg">&lt;/artifactId&gt;</span>
+  <span class="tg">&lt;/dependency&gt;</span>
+
+  <span class="pp">&lt;!-- 5. MySQL: driver do banco de dados --&gt;</span>
+  <span class="tg">&lt;dependency&gt;</span>
+    <span class="tg">&lt;artifactId&gt;</span>mysql-connector-j<span class="tg">&lt;/artifactId&gt;</span>
+    <span class="tg">&lt;scope&gt;</span>runtime<span class="tg">&lt;/scope&gt;</span>
+  <span class="tg">&lt;/dependency&gt;</span>
+
+  <span class="pp">&lt;!-- 6. LOMBOK: elimina getters/setters/construtores --&gt;</span>
+  <span class="tg">&lt;dependency&gt;</span>
+    <span class="tg">&lt;artifactId&gt;</span>lombok<span class="tg">&lt;/artifactId&gt;</span>
+    <span class="tg">&lt;optional&gt;</span>true<span class="tg">&lt;/optional&gt;</span>
+  <span class="tg">&lt;/dependency&gt;</span>
+
+<span class="tg">&lt;/dependencies&gt;</span></pre></div>
+
+    <table>
+      <tr><th>Dependência</th><th>Para que serve</th></tr>
+      <tr><td><code>starter-security</code></td><td>Núcleo — autentica e autoriza tudo</td></tr>
+      <tr><td><code>starter-data-jpa</code></td><td>Persiste e consulta usuários no banco</td></tr>
+      <tr><td><code>starter-thymeleaf</code></td><td>Renderiza as páginas HTML no servidor</td></tr>
+      <tr><td><code>thymeleaf-extras-springsecurity6</code></td><td>Habilita tags <code>sec:</code> nos templates</td></tr>
+      <tr><td><code>mysql-connector-j</code></td><td>Driver JDBC para conexão com MySQL</td></tr>
+      <tr><td><code>lombok</code></td><td>Gera getters, setters e construtores</td></tr>
+    </table>
+  </section>
+
+
+  <!-- ═══════════════════════ SEÇÃO 3 ══════════════════════════════════ -->
+  <section id="s3">
+    <div class="section-title">
+      <div class="section-num">3</div>
+      <h2>Arquitetura e Filter Chain</h2>
+    </div>
+
+    <p>O Spring Security funciona como uma <strong>cadeia de filtros</strong> (Security Filter Chain) que intercepta cada requisição HTTP <em>antes</em> de ela chegar ao seu Controller. Cada filtro verifica um aspecto diferente da segurança.</p>
+
+    <h3>Fluxo de uma requisição</h3>
+
+    <div class="processo">
+      <div class="processo-item">
+        <div class="processo-num">1</div>
+        <div class="processo-body">
+          <h4>Requisição HTTP chega</h4>
+          <p>O navegador faz uma requisição GET ou POST para qualquer rota da aplicação.</p>
+        </div>
+      </div>
+      <div class="processo-item">
+        <div class="processo-num">2</div>
+        <div class="processo-body">
+          <h4>Security Filter Chain intercepta</h4>
+          <p>Antes de chegar ao Controller, a requisição passa por todos os filtros de segurança configurados.</p>
+        </div>
+      </div>
+      <div class="processo-item">
+        <div class="processo-num">3</div>
+        <div class="processo-body">
+          <h4>Verificação de autenticação</h4>
+          <p>O filtro verifica se há uma sessão ativa ou credenciais válidas no request.</p>
+        </div>
+      </div>
+      <div class="processo-item">
+        <div class="processo-num">4</div>
+        <div class="processo-body">
+          <h4>Verificação de autorização</h4>
+          <p>Com base nas regras do <code>SecurityFilterChain</code>, verifica se o usuário tem permissão para acessar aquela rota específica.</p>
+        </div>
+      </div>
+      <div class="processo-item">
+        <div class="processo-num">5</div>
+        <div class="processo-body">
+          <h4>Controller é chamado</h4>
+          <p>Somente se todas as verificações passarem, a requisição chega ao seu Controller e retorna a View.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>Os 4 blocos que você vai criar</h3>
+
+    <table>
+      <tr><th>Bloco</th><th>Classe</th><th>Responsabilidade</th></tr>
+      <tr><td><strong>Entidade</strong></td><td><code>Usuario</code></td><td>Representa o usuário no banco de dados</td></tr>
+      <tr><td><strong>Repositório</strong></td><td><code>UsuarioRepository</code></td><td>Busca o usuário no banco via email</td></tr>
+      <tr><td><strong>Serviço</strong></td><td><code>UsuarioDetailsService</code></td><td>Ponte entre o banco e o Spring Security</td></tr>
+      <tr><td><strong>Configuração</strong></td><td><code>SecurityConfig</code></td><td>Define todas as regras de segurança</td></tr>
+    </table>
+
+    <div class="box box-azul">
+      <strong>ℹ️ Spring Boot 3 vs Spring Boot 2</strong>
+      No Spring Boot 2, a configuração era feita herdando <code>WebSecurityConfigurerAdapter</code>. No Spring Boot 3 essa classe foi <strong>removida</strong>. A forma correta agora é usar beans com <code>@Bean</code> e lambdas — como mostrado nesta apostila.
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════ SEÇÃO 4 ══════════════════════════════════ -->
+  <section id="s4">
+    <div class="section-title">
+      <div class="section-num">4</div>
+      <h2>Passo 1 — Entidade Usuario</h2>
+    </div>
+
+    <p>Este é o modelo mapeado para a tabela no banco. O Spring Security precisa de pelo menos: <strong>username</strong>, <strong>password</strong> e <strong>roles</strong> para funcionar.</p>
+
+    <div class="diagrama"><pre><span class="an">@Data</span>              <span class="cm">// Lombok: getters, setters, equals, hashCode</span>
+<span class="an">@NoArgsConstructor</span> <span class="cm">// Lombok: construtor sem args (obrigatório para JPA)</span>
+<span class="an">@Entity</span>
+<span class="an">@Table</span>(<span class="at">name</span> = <span class="str">"usuarios"</span>)
+<span class="kw">public class</span> <span class="fn">Usuario</span> {
+
+  <span class="an">@Id</span>
+  <span class="an">@GeneratedValue</span>(<span class="at">strategy</span> = GenerationType.IDENTITY)
+  <span class="kw">private</span> Long id;
+
+  <span class="an">@Column</span>(<span class="at">nullable</span> = <span class="kw">false</span>, <span class="at">unique</span> = <span class="kw">true</span>)
+  <span class="kw">private</span> String email;
+
+  <span class="an">@Column</span>(<span class="at">nullable</span> = <span class="kw">false</span>)
+  <span class="kw">private</span> String senha;   <span class="cm">// sempre armazenar o hash BCrypt</span>
+
+  <span class="an">@Column</span>(<span class="at">nullable</span> = <span class="kw">false</span>)
+  <span class="kw">private</span> String role;    <span class="cm">// ex: "ROLE_USER" ou "ROLE_ADMIN"</span>
+}</pre></div>
+
+    <div class="comparativo">
+      <div class="comp-card">
+        <h4><span class="tag-vm">ROLE_USER</span> &nbsp;Usuário comum</h4>
+        <ul>
+          <li>Acessa páginas públicas</li>
+          <li>Acessa <code>/home</code> após login</li>
+          <li>Não acessa <code>/admin/**</code></li>
+          <li>Role atribuída no cadastro</li>
+        </ul>
+      </div>
+      <div class="comp-card">
+        <h4><span class="tag-verde">ROLE_ADMIN</span> &nbsp;Administrador</h4>
+        <ul>
+          <li>Acessa todas as páginas</li>
+          <li>Acessa <code>/admin/**</code></li>
+          <li>Pode gerenciar usuários</li>
+          <li>Role atribuída manualmente</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="box box-dica">
+      <strong>💡 Por que o prefixo ROLE_?</strong>
+      O Spring Security espera roles começando com <code>ROLE_</code>. Ao usar <code>.hasRole("USER")</code> no SecurityConfig, o Spring adiciona <code>ROLE_</code> automaticamente. Com <code>.hasAuthority("ROLE_USER")</code> você precisa escrever o nome completo.
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════ SEÇÃO 5 ══════════════════════════════════ -->
+  <section id="s5">
+    <div class="section-title">
+      <div class="section-num">5</div>
+      <h2>Passo 2 — Repository</h2>
+    </div>
+
+    <p>O Repository é a interface que faz as consultas no banco. Você só precisa de um método customizado: buscar o usuário pelo email. O Spring Data JPA cria a query SQL automaticamente pelo nome do método.</p>
+
+    <div class="diagrama"><pre><span class="an">@Repository</span>
+<span class="kw">public interface</span> <span class="fn">UsuarioRepository</span>
+    <span class="kw">extends</span> JpaRepository&lt;Usuario, Long&gt; {
+
+  <span class="cm">// Spring Data cria automaticamente a query:
+  // SELECT * FROM usuarios WHERE email = ?</span>
+  Optional&lt;Usuario&gt; <span class="fn">findByEmail</span>(String email);
+}</pre></div>
+
+    <div class="box box-info">
+      <strong>✅ Por que Optional?</strong>
+      Evita <code>NullPointerException</code>. Se o usuário não existir, retorna <code>Optional.empty()</code> em vez de <code>null</code>, permitindo encadear <code>.orElseThrow()</code> com uma mensagem de erro clara.
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════ SEÇÃO 6 ══════════════════════════════════ -->
+  <section id="s6">
+    <div class="section-title">
+      <div class="section-num">6</div>
+      <h2>Passo 3 — UserDetailsService</h2>
+    </div>
+
+    <p>Esta é a <strong>peça central</strong> da integração. Você está dizendo ao framework: <em>"quando precisar autenticar alguém, use este método para buscar o usuário."</em> O Spring Security não sabe como seu banco está estruturado — você ensina aqui.</p>
+
+    <div class="diagrama"><pre><span class="an">@Service</span>
+<span class="kw">public class</span> <span class="fn">UsuarioDetailsService</span>
+    <span class="kw">implements</span> UserDetailsService {
+
+  <span class="an">@Autowired</span>
+  <span class="kw">private</span> UsuarioRepository usuarioRepository;
+
+  <span class="cm">// O Security chama este método com o "username" digitado no form</span>
+  <span class="an">@Override</span>
+  <span class="kw">public</span> UserDetails <span class="fn">loadUserByUsername</span>(String email)
+      <span class="kw">throws</span> UsernameNotFoundException {
+
+    <span class="cm">// 1. Busca no banco pelo email</span>
+    Usuario usuario = usuarioRepository
+        .<span class="fn">findByEmail</span>(email)
+        .<span class="fn">orElseThrow</span>(() -> <span class="kw">new</span> <span class="fn">UsernameNotFoundException</span>(
+            <span class="str">"Usuário não encontrado: "</span> + email
+        ));
+
+    <span class="cm">// 2. Converte a role para o formato do Spring Security</span>
+    SimpleGrantedAuthority authority =
+        <span class="kw">new</span> <span class="fn">SimpleGrantedAuthority</span>(usuario.<span class="fn">getRole</span>());
+
+    <span class="cm">// 3. Retorna UserDetails — objeto padrão do framework</span>
+    <span class="kw">return new</span> <span class="fn">User</span>(
+        usuario.<span class="fn">getEmail</span>(),   <span class="cm">// username</span>
+        usuario.<span class="fn">getSenha</span>(),   <span class="cm">// senha já em hash BCrypt</span>
+        Collections.<span class="fn">singletonList</span>(authority)
+    );
+  }
+}</pre></div>
+
+    <div class="box box-roxo">
+      <strong>🔌 O papel do UserDetailsService</strong>
+      É a "ponte" entre o seu banco e o Spring Security. O framework não sabe como seus dados estão estruturados — ele chama <code>loadUserByUsername()</code> e espera receber um <code>UserDetails</code>. Você decide como buscar e montar esse objeto.
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════ SEÇÃO 7 ══════════════════════════════════ -->
+  <section id="s7">
+    <div class="section-title">
+      <div class="section-num">7</div>
+      <h2>Passo 4 — SecurityConfig</h2>
+    </div>
+
+    <p>Esta é a classe mais importante. Ela define os 3 beans essenciais que governam toda a segurança da aplicação.</p>
+
+    <h3>Bean 1 — PasswordEncoder (BCrypt)</h3>
+
+    <div class="diagrama"><pre><span class="an">@Bean</span>
+<span class="kw">public</span> PasswordEncoder <span class="fn">passwordEncoder</span>() {
+  <span class="cm">// BCrypt gera um hash diferente a cada chamada,
+  // mesmo para a mesma senha</span>
+  <span class="kw">return new</span> <span class="fn">BCryptPasswordEncoder</span>();
+}</pre></div>
+
+    <h3>Bean 2 — DaoAuthenticationProvider</h3>
+
+    <div class="diagrama"><pre><span class="an">@Bean</span>
+<span class="kw">public</span> DaoAuthenticationProvider <span class="fn">authenticationProvider</span>() {
+  DaoAuthenticationProvider provider =
+      <span class="kw">new</span> <span class="fn">DaoAuthenticationProvider</span>();
+  provider.<span class="fn">setUserDetailsService</span>(usuarioDetailsService);
+  provider.<span class="fn">setPasswordEncoder</span>(<span class="fn">passwordEncoder</span>());
+  <span class="kw">return</span> provider;
+}</pre></div>
+
+    <h3>Bean 3 — SecurityFilterChain (regras de acesso)</h3>
+
+    <div class="diagrama"><pre><span class="an">@Bean</span>
+<span class="kw">public</span> SecurityFilterChain <span class="fn">securityFilterChain</span>(HttpSecurity http)
+    <span class="kw">throws</span> Exception {
+
+  http
+    <span class="cm">// 1. REGRAS POR ROTA</span>
+    .<span class="fn">authorizeHttpRequests</span>(auth -> auth
+      .<span class="fn">requestMatchers</span>(<span class="str">"/cadastro"</span>, <span class="str">"/login"</span>, <span class="str">"/css/**"</span>)
+          .<span class="fn">permitAll</span>()        <span class="cm">// rotas públicas</span>
+      .<span class="fn">requestMatchers</span>(<span class="str">"/admin/**"</span>)
+          .<span class="fn">hasRole</span>(<span class="str">"ADMIN"</span>)   <span class="cm">// só ROLE_ADMIN</span>
+      .<span class="fn">anyRequest</span>().<span class="fn">authenticated</span>() <span class="cm">// resto exige login</span>
+    )
+
+    <span class="cm">// 2. FORMULÁRIO DE LOGIN</span>
+    .<span class="fn">formLogin</span>(form -> form
+      .<span class="fn">loginPage</span>(<span class="str">"/login"</span>)
+      .<span class="fn">loginProcessingUrl</span>(<span class="str">"/login"</span>)
+      .<span class="fn">defaultSuccessUrl</span>(<span class="str">"/home"</span>, <span class="kw">true</span>)
+      .<span class="fn">failureUrl</span>(<span class="str">"/login?error=true"</span>)
+      .<span class="fn">permitAll</span>()
+    )
+
+    <span class="cm">// 3. LOGOUT</span>
+    .<span class="fn">logout</span>(logout -> logout
+      .<span class="fn">logoutUrl</span>(<span class="str">"/logout"</span>)
+      .<span class="fn">logoutSuccessUrl</span>(<span class="str">"/login?logout=true"</span>)
+      .<span class="fn">invalidateHttpSession</span>(<span class="kw">true</span>)
+      .<span class="fn">deleteCookies</span>(<span class="str">"JSESSIONID"</span>)
+      .<span class="fn">permitAll</span>()
+    );
+
+  <span class="kw">return</span> http.<span class="fn">build</span>();
+}</pre></div>
+
+    <div class="box box-aviso">
+      <strong>⚠️ Ordem das regras importa!</strong>
+      As regras do <code>authorizeHttpRequests</code> são avaliadas na ordem em que foram declaradas. Sempre coloque as regras mais específicas antes das mais genéricas. <code>.anyRequest().authenticated()</code> deve ser sempre o último.
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════ SEÇÃO 8 ══════════════════════════════════ -->
+  <section id="s8">
+    <div class="section-title">
+      <div class="section-num">8</div>
+      <h2>Passo 5 — Controller</h2>
+    </div>
+
+    <p>O Controller trata as requisições HTTP. Para o sistema de login, você precisa das rotas de cadastro, de exibição do login (o <strong>POST é tratado pelo Spring Security</strong>, não pelo Controller) e da página protegida.</p>
+
+    <div class="diagrama"><pre><span class="an">@Controller</span>
+<span class="kw">public class</span> <span class="fn">UsuarioController</span> {
+
+  <span class="an">@Autowired</span> <span class="kw">private</span> UsuarioRepository usuarioRepository;
+  <span class="an">@Autowired</span> <span class="kw">private</span> PasswordEncoder passwordEncoder;
+
+  <span class="cm">// GET /login → exibe a página de login</span>
+  <span class="an">@GetMapping</span>(<span class="str">"/login"</span>)
+  <span class="kw">public</span> String <span class="fn">login</span>() { <span class="kw">return</span> <span class="str">"login"</span>; }
+
+  <span class="cm">// GET /cadastro → exibe o formulário</span>
+  <span class="an">@GetMapping</span>(<span class="str">"/cadastro"</span>)
+  <span class="kw">public</span> String <span class="fn">cadastro</span>() { <span class="kw">return</span> <span class="str">"cadastro"</span>; }
+
+  <span class="cm">// POST /cadastro → processa e salva o usuário</span>
+  <span class="an">@PostMapping</span>(<span class="str">"/cadastro"</span>)
+  <span class="kw">public</span> String <span class="fn">salvarUsuario</span>(
+      <span class="an">@RequestParam</span> String email,
+      <span class="an">@RequestParam</span> String senha, Model model) {
+
+    <span class="kw">if</span> (usuarioRepository.<span class="fn">findByEmail</span>(email).<span class="fn">isPresent</span>()) {
+      model.<span class="fn">addAttribute</span>(<span class="str">"erro"</span>, <span class="str">"E-mail já cadastrado!"</span>);
+      <span class="kw">return</span> <span class="str">"cadastro"</span>;
+    }
+
+    Usuario novo = <span class="kw">new</span> <span class="fn">Usuario</span>();
+    novo.<span class="fn">setEmail</span>(email);
+    novo.<span class="fn">setSenha</span>(passwordEncoder.<span class="fn">encode</span>(senha)); <span class="cm">// ← SEMPRE encodar!</span>
+    novo.<span class="fn">setRole</span>(<span class="str">"ROLE_USER"</span>);
+    usuarioRepository.<span class="fn">save</span>(novo);
+    <span class="kw">return</span> <span class="str">"redirect:/login?cadastro=true"</span>;
+  }
+
+  <span class="cm">// GET /home → página protegida (só logados)</span>
+  <span class="an">@GetMapping</span>(<span class="str">"/home"</span>)
+  <span class="kw">public</span> String <span class="fn">home</span>() { <span class="kw">return</span> <span class="str">"home"</span>; }
+}</pre></div>
+
+    <div class="box box-erro">
+      <strong>🚨 Regra de ouro — nunca salve senha em texto puro</strong>
+      Use sempre <code>passwordEncoder.encode(senha)</code> antes de persistir no banco. Salvar senha em texto puro é uma falha grave e irrecuperável de segurança. O banco deve armazenar apenas o hash BCrypt.
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════ SEÇÃO 9 ══════════════════════════════════ -->
+  <section id="s9">
+    <div class="section-title">
+      <div class="section-num">9</div>
+      <h2>Passo 6 — Views com Thymeleaf</h2>
+    </div>
+
+    <p>Os templates HTML usam dois namespaces: <code>th:</code> do Thymeleaf para lógica de template e <code>sec:</code> para controle de exibição baseado em autenticação.</p>
+
+    <h3>login.html — campos obrigatórios</h3>
+
+    <div class="box box-erro">
+      <strong>⚠️ Nomes de campos obrigatórios</strong>
+      Os campos do form de login <strong>devem</strong> se chamar <code>name="username"</code> e <code>name="password"</code> — esse é o padrão esperado pelo Spring Security. Se usar nomes diferentes, o login nunca vai funcionar.
+    </div>
+
+    <div class="diagrama"><pre><span class="tg">&lt;html</span> <span class="at">xmlns:th</span>=<span class="str">"http://www.thymeleaf.org"</span>
+      <span class="at">xmlns:sec</span>=<span class="str">"http://www.thymeleaf.org/extras/spring-security"</span><span class="tg">&gt;</span>
+
+<span class="pp">&lt;!-- Mensagens de feedback --&gt;</span>
+<span class="tg">&lt;div</span> <span class="at">th:if</span>=<span class="str">"${param.error}"</span><span class="tg">&gt;</span>E-mail ou senha inválidos!<span class="tg">&lt;/div&gt;</span>
+<span class="tg">&lt;div</span> <span class="at">th:if</span>=<span class="str">"${param.logout}"</span><span class="tg">&gt;</span>Você saiu com sucesso.<span class="tg">&lt;/div&gt;</span>
+
+<span class="pp">&lt;!-- Spring Security intercepta este POST — sem método no Controller --&gt;</span>
+<span class="tg">&lt;form</span> <span class="at">th:action</span>=<span class="str">"@{/login}"</span> <span class="at">method</span>=<span class="str">"post"</span><span class="tg">&gt;</span>
+  <span class="tg">&lt;input</span> <span class="at">type</span>=<span class="str">"email"</span>    <span class="at">name</span>=<span class="str">"username"</span> <span class="at">required</span><span class="tg">/&gt;</span>
+  <span class="tg">&lt;input</span> <span class="at">type</span>=<span class="str">"password"</span> <span class="at">name</span>=<span class="str">"password"</span> <span class="at">required</span><span class="tg">/&gt;</span>
+  <span class="tg">&lt;button</span> <span class="at">type</span>=<span class="str">"submit"</span><span class="tg">&gt;</span>Entrar<span class="tg">&lt;/button&gt;</span>
+<span class="tg">&lt;/form&gt;</span></pre></div>
+
+    <h3>home.html — tags sec: do Thymeleaf</h3>
+
+    <div class="diagrama"><pre><span class="tg">&lt;html</span> <span class="at">xmlns:sec</span>=<span class="str">"http://www.thymeleaf.org/extras/spring-security"</span><span class="tg">&gt;</span>
+
+<span class="pp">&lt;!-- Exibe o email do usuário logado --&gt;</span>
+Bem-vindo, <span class="tg">&lt;span</span> <span class="at">sec:authentication</span>=<span class="str">"name"</span><span class="tg">&gt;&lt;/span&gt;</span>!
+
+<span class="pp">&lt;!-- Visível apenas para ROLE_ADMIN --&gt;</span>
+<span class="tg">&lt;div</span> <span class="at">sec:authorize</span>=<span class="str">"hasRole('ADMIN')"</span><span class="tg">&gt;</span>
+  <span class="tg">&lt;p&gt;</span>Painel de Administração<span class="tg">&lt;/p&gt;</span>
+<span class="tg">&lt;/div&gt;</span>
+
+<span class="pp">&lt;!-- Logout DEVE ser POST — proteção CSRF --&gt;</span>
+<span class="tg">&lt;form</span> <span class="at">th:action</span>=<span class="str">"@{/logout}"</span> <span class="at">method</span>=<span class="str">"post"</span><span class="tg">&gt;</span>
+  <span class="tg">&lt;button</span> <span class="at">type</span>=<span class="str">"submit"</span><span class="tg">&gt;</span>Sair<span class="tg">&lt;/button&gt;</span>
+<span class="tg">&lt;/form&gt;</span></pre></div>
+
+    <div class="box box-dica">
+      <strong>💡 Por que o logout é POST?</strong>
+      O Spring Security exige POST para o logout como proteção CSRF. Um link GET poderia ser explorado para deslogar alguém sem consentimento. Nunca use <code>&lt;a href="/logout"&gt;</code>.
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════ SEÇÃO 10 ═════════════════════════════════ -->
+  <section id="s10">
+    <div class="section-title">
+      <div class="section-num">10</div>
+      <h2>Passo 7 — application.properties</h2>
+    </div>
+
+    <p>Configuração da conexão com o MySQL, do Hibernate e do Thymeleaf para o ambiente de desenvolvimento.</p>
+
+    <div class="diagrama"><pre><span class="cm"># ── Conexão MySQL ──────────────────────────────────────</span>
+spring.datasource.url=jdbc:mysql://localhost:3306/sistema_login?createDatabaseIfNotExist=true
+spring.datasource.username=root
+spring.datasource.password=sua_senha
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+<span class="cm"># ── JPA / Hibernate ────────────────────────────────────</span>
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+<span class="cm"># ── Thymeleaf ──────────────────────────────────────────</span>
+spring.thymeleaf.cache=false</pre></div>
+
+    <table>
+      <tr><th>Valor de ddl-auto</th><th>Comportamento</th><th>Quando usar</th></tr>
+      <tr><td><code>update</code></td><td>Cria/atualiza tabelas sem apagar dados</td><td>Desenvolvimento</td></tr>
+      <tr><td><code>create</code></td><td>Recria as tabelas do zero a cada restart</td><td>Testes locais</td></tr>
+      <tr><td><code>validate</code></td><td>Valida o schema sem alterar nada</td><td>Produção (seguro)</td></tr>
+      <tr><td><code>none</code></td><td>Sem nenhuma ação do Hibernate</td><td>Produção</td></tr>
+    </table>
+  </section>
+
+
+  <!-- ═══════════════════════ SEÇÃO 11 ═════════════════════════════════ -->
+  <section id="s11">
+    <div class="section-title">
+      <div class="section-num">11</div>
+      <h2>Fluxo Completo de Autenticação</h2>
+    </div>
+
+    <p>O que acontece internamente entre o clique em "Entrar" e o redirecionamento para <code>/home</code>.</p>
+
+    <div class="processo">
+      <div class="processo-item">
+        <div class="processo-num">1</div>
+        <div class="processo-body">
+          <h4>Usuário submete o formulário</h4>
+          <p>POST <code>/login</code> com campos <code>username</code> e <code>password</code> — interceptado pelo Spring Security antes de qualquer Controller.</p>
+        </div>
+      </div>
+      <div class="processo-item">
+        <div class="processo-num">2</div>
+        <div class="processo-body">
+          <h4>UsernamePasswordAuthenticationFilter</h4>
+          <p>Extrai as credenciais do request e cria um token de autenticação para processar.</p>
+        </div>
+      </div>
+      <div class="processo-item">
+        <div class="processo-num">3</div>
+        <div class="processo-body">
+          <h4>DaoAuthenticationProvider</h4>
+          <p>Chama <code>loadUserByUsername(email)</code> no <code>UsuarioDetailsService</code>, que busca o usuário no banco via <code>UsuarioRepository</code>.</p>
+        </div>
+      </div>
+      <div class="processo-item">
+        <div class="processo-num">4</div>
+        <div class="processo-body">
+          <h4>Verificação BCrypt</h4>
+          <p>O <code>BCryptPasswordEncoder</code> compara a senha digitada com o hash armazenado no banco. Nunca compara texto puro.</p>
+        </div>
+      </div>
+      <div class="processo-item">
+        <div class="processo-num">5</div>
+        <div class="processo-body">
+          <h4>SecurityContext atualizado</h4>
+          <p>O usuário fica "logado" na sessão HTTP. <code>SecurityContextHolder.setAuthentication(...)</code> é chamado internamente.</p>
+        </div>
+      </div>
+      <div class="processo-item">
+        <div class="processo-num">6</div>
+        <div class="processo-body">
+          <h4>Redirect para /home</h4>
+          <p>Configurado em <code>defaultSuccessUrl("/home", true)</code> no <code>SecurityConfig</code>. Em caso de falha, vai para <code>/login?error=true</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════ SEÇÃO 12 ═════════════════════════════════ -->
+  <section id="s12">
+    <div class="section-title">
+      <div class="section-num">12</div>
+      <h2>Erros Comuns e Como Resolver</h2>
+    </div>
+
+    <p>Os 5 problemas mais frequentes ao configurar Spring Security pela primeira vez.</p>
+
+    <div class="exemplo-real">
+      <div class="label">❌ Erro 1</div>
+      <h4>There is no PasswordEncoder mapped for the id "null"</h4>
+      <p><strong>Causa:</strong> A senha foi salva sem encodar, ou o bean <code>PasswordEncoder</code> não foi configurado no <code>SecurityConfig</code>.</p>
+      <p><strong>Solução:</strong> Garanta que existe o bean <code>BCryptPasswordEncoder</code> e que usa <code>passwordEncoder.encode(senha)</code> ao salvar o usuário no Controller.</p>
+    </div>
+
+    <div class="exemplo-real">
+      <div class="label">❌ Erro 2</div>
+      <h4>403 Forbidden em CSS, JS e imagens</h4>
+      <p><strong>Causa:</strong> O Spring Security está bloqueando os arquivos estáticos da aplicação.</p>
+      <p><strong>Solução:</strong> Adicione no <code>SecurityFilterChain</code>: <code>.requestMatchers("/css/**", "/js/**", "/images/**").permitAll()</code></p>
+    </div>
+
+    <div class="exemplo-real">
+      <div class="label">❌ Erro 3</div>
+      <h4>Login sempre retorna erro mesmo com credenciais corretas</h4>
+      <p><strong>Causas mais comuns:</strong> (1) campo do form não se chama <code>username</code>/<code>password</code>; (2) senha no banco não está em BCrypt; (3) <code>loadUserByUsername</code> busca pelo campo errado.</p>
+      <p><strong>Como verificar:</strong> A senha BCrypt sempre começa com <code>$2a$</code>. Se no banco estiver texto puro, o problema está no cadastro.</p>
+    </div>
+
+    <div class="exemplo-real">
+      <div class="label">❌ Erro 4</div>
+      <h4>Logout via link GET não funciona (403)</h4>
+      <p><strong>Causa:</strong> O Spring Security exige POST para logout por proteção CSRF.</p>
+      <p><strong>Solução:</strong> Use sempre <code>&lt;form method="post" th:action="@{/logout}"&gt;</code>. Nunca use <code>&lt;a href="/logout"&gt;</code>.</p>
+    </div>
+
+    <div class="exemplo-real">
+      <div class="label">❌ Erro 5</div>
+      <h4>WebSecurityConfigurerAdapter — cannot find symbol</h4>
+      <p><strong>Causa:</strong> Você está seguindo um tutorial do Spring Boot 2.x. Essa classe foi removida no Spring Boot 3.</p>
+      <p><strong>Solução:</strong> Use o estilo moderno com <code>SecurityFilterChain</code> como <code>@Bean</code>, conforme mostrado nesta apostila.</p>
+    </div>
+
+    <hr class="divisor"/>
+
+    <div class="box box-info">
+      <strong>✅ Resumo das classes criadas</strong>
+      <ul>
+        <li><strong>model/Usuario.java</strong> — Entidade JPA com email, senha (BCrypt) e role</li>
+        <li><strong>repository/UsuarioRepository.java</strong> — Interface com <code>findByEmail()</code></li>
+        <li><strong>service/UsuarioDetailsService.java</strong> — Implementa <code>UserDetailsService</code></li>
+        <li><strong>config/SecurityConfig.java</strong> — 3 beans: PasswordEncoder, AuthProvider, FilterChain</li>
+        <li><strong>controller/UsuarioController.java</strong> — GET/POST /cadastro, GET /login, GET /home</li>
+        <li><strong>templates/login.html</strong> — Form com campos <code>username</code> e <code>password</code></li>
+        <li><strong>templates/home.html</strong> — Tags <code>sec:authentication</code> e <code>sec:authorize</code></li>
+      </ul>
+    </div>
+
+    <div class="rodape">
+      <p>Apostila — Spring Security com Spring Boot 3 &nbsp;|&nbsp; Projeto: Will-firmino / _SistemaLogin</p>
+      <p>Material didático para fins acadêmicos.</p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  const sections = document.querySelectorAll('section[id]');
+  const links    = document.querySelectorAll('.sidebar nav a');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('ativo'));
+        const ativo = document.querySelector(`.sidebar nav a[href="#${entry.target.id}"]`);
+        if (ativo) ativo.classList.add('ativo');
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
